@@ -7,7 +7,7 @@ const Expense=sequelize.define('EXPENSE',{
     allowNULL:false,
     primaryKey:true
   },
-  name:Sequelize.STRING,
+  name:Sequelize.INTEGER,
   email:Sequelize.STRING,
 
  phonenumber:Sequelize.STRING,
