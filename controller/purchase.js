@@ -1,5 +1,6 @@
 const Razorpay=require('razorpay')
 const Order=require('../model/order')
+const usercontroller=require('./user')
 require('dotenv').config();
 exports.purchasepremium = async (req,res)=>{
     try{
@@ -28,12 +29,13 @@ exports.purchasepremium = async (req,res)=>{
 }
 exports.updatetransactionStatus = async (req,res)=>{
     try{
+        const userId=req.user.id
         const{payment_id,order_id}=req.body
         const order=await Order.findOne({where:{orderid:order_id}})
         const promise1=order.update({paymentid:payment_id,status:'SUCCESSFUL'})
         const promise2=req.user.update({ispremiumuser:true})
         Promise.all([promise1,promise2]).then(()=>{
-return res.status(202).json({success:true,message:'transaction successful'})
+return res.status(202).json({success:true,message:'transaction successful',token: usercontroller.generateAccesstoken(userId, undefined, true)})
         }).catch((error)=>{
             throw new Error(error)
         })

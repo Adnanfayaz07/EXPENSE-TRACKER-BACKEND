@@ -12,7 +12,7 @@ function isstringinvalid(string) {
 
     }
 }
-exports.signup = async (req, res) => {
+const signup = async (req, res) => {
     try {
         const { name, email, password } = req.body;
         console.log('email', email)
@@ -31,10 +31,10 @@ exports.signup = async (req, res) => {
         res.status(500).json(err)
     }
 }
-function generateAccesstoken(id,name){
-return jwt.sign({userId:id,name:name},'hellonomo')
+const  generateAccesstoken= (id,name,ispremiumuser)=>{
+return jwt.sign({userId:id,name:name,ispremiumuser},'hellonomo')
 }
-exports.login = async (req, res) => {
+const login = async (req, res) => {
     try {
         const { email, password } = req.body;
         if (isstringinvalid(email) || isstringinvalid(password)) {
@@ -48,7 +48,7 @@ exports.login = async (req, res) => {
                     throw new Error('something went wrong')
                 }
                    if(result==true) {
-                  return   res.status(200).json({ success: true, message: 'user logged in successfully',token:generateAccesstoken(user[0].id,user[0].name) })
+                  return   res.status(200).json({ success: true, message: 'user logged in successfully',token:generateAccesstoken(user[0].id,user[0].name,user[0].ispremiumuser) })
                 }
                     else{
                     return res.status(400).json({ success: false, message: "password is incorrect" })
@@ -66,3 +66,8 @@ exports.login = async (req, res) => {
         }
 
     }
+    module.exports = {
+        signup: signup,
+        login: login,
+        generateAccesstoken: generateAccesstoken, // Use lowercase "generateAccesstoken"
+    };
