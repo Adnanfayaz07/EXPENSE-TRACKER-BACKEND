@@ -1,25 +1,35 @@
-const Expense= require('../model/expense')
 
+const Expense= require('../model/expense');
+const Users = require('../model/user');
 exports.addexpense = async (req, res) => {
-    try {
       const name = req.body.name;
       const email = req.body.email;
       const phonenumber = req.body.phonenumber;
 if(name===undefined||name.length===0){
   return res.status(400).json({ success:false,message: "Bad parameters.Something is missing" })
 }
-      const data = await Expense .create({
+     Expense .create({
         name: name,
         email: email,
         phonenumber: phonenumber,
         userId:req.user.id
-      });
+      }).then(data => {
+        const totalExpense=Number(req.user.totalExpense)+Number(name)
+        console.log(totalExpense)
+        Users.update({
+          totalExpense:totalExpense
+        },{
+          where:{id:req.user.id}
+        }).then(async()=>{
+          res.status(200).json({expense:data})
 
-      res.status(201).json({ expense: data });
-    } catch (err) {
-      console.error(err); // Log the error for debugging
-      res.status(500).json({ error: 'Internal server error' });
-    }
+        }).catch(async(err)=>{
+          return res.status(500).json({success:false,error:err})
+        })
+      }).catch(async(err)=>{
+        return res.status(500).json({success:false,error:err})
+      })
+   
   };
 exports.getexpense=async(req,res)=>{
     try{

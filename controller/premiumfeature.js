@@ -5,13 +5,8 @@ const sequelize=require('../util/database')
 const getuserleadereboard=async(req,res)=>{
     try{
         const userleaderboarddetails=await Users.findAll({
-            attributes:['id','name',[sequelize.fn('sum',sequelize.col('expenses.name')),'total_cost']],
-            include:[{
-                model:Expense,
-                attributes:[]
-            }],
-            group:['Users.id'],
-            order:[['total_cost','DESC']]
+          
+            order:[['totalExpense','DESC']]
         })
        
         res.status(200).json(userleaderboarddetails)
