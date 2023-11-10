@@ -1,78 +1,159 @@
+const Expense=require('../model/expense')
+const User=require('../model/user')
 
-const Expense = require('../model/expense');
-const Users = require('../model/user');
-const sequelize = require('../util/database')
-exports.addexpense = async (req, res) => {
-  const t = await sequelize.transaction();
-  try{
-  const name = req.body.name;
-  const email = req.body.email;
-  const phonenumber = req.body.phonenumber;
-  if (name === undefined || name.length === 0) {
-    return res.status(400).json({ success: false, message: "Bad parameters.Something is missing" })
-  }
-   const data = await Expense.create({
-    name: name,
-    email: email,
-    phonenumber: phonenumber,
-    userId: req.user.id
-  }, { transaction: t })
-    const totalExpense = Number(req.user.totalExpense) + Number(name)
-    console.log(totalExpense)
-   await  Users.update({
-      totalExpense: totalExpense
-    }, {
-      where: { id: req.user.id },
-      transaction: t
-    })
-      await t.commit()
-      res.status(200).json({ expense: data })
+const sequelize=require('../util/database')
 
-    
-  }catch (err) {
-    await t.rollback()
-    return res.status(500).json({ success: false, error: err })
-  }
 
-};
-exports.getexpense = async (req, res) => {
-  try {
-    const expenses = await Expense.findAll({ where: { userId: req.user.id } })
-    res.status(200).json({ expenses, success: true })
-  } catch (error) {
-    console.log('get user is failing', JSON.stringify(error))
-  }
+
+function isStringNotValid(string){
+    if(string===undefined || string.length===0){
+        return true
+    }
+    else{
+        return false
+    }
 }
-exports.deleteexpense = async (req, res) => {
-  const t = await sequelize.transaction(); 
-  try {
-    if (req.params.id == 'undefined'||req.params.id.length===0) {
-      return res.status(400).json({ err: 'ID is missing' });
-    }
-    const expenseId = req.params.id;
 
-    const expenseToDelete = await Expense.findByPk(expenseId, { transaction: t });
-    if (!expenseToDelete) {
-      await t.rollback(); 
-      return res.status(404).json({ err: 'Expense not found' });
-    }
-    if (expenseToDelete.userId !== req.user.id) {
-      await t.rollback(); 
-      return res.status(403).json({ err: 'Permission denied' });
-    }
-    const expenseAmount = Number(expenseToDelete.name);
-    const user = await Users.findByPk(req.user.id, { transaction: t });
-    if (user) {
-      const totalExpense = Number(user.totalExpense) - expenseAmount;
-      await user.update({ totalExpense }, { transaction: t });
-    }
-    await Expense.destroy({ where: { id: expenseId }, transaction: t });
 
-    await t.commit(); 
-    res.sendStatus(200);
-  } catch (err) {
-    await t.rollback(); 
-    console.log(err);
-    res.status(500).json(err);
-  }
+
+exports.addExpenses=async(req,res)=>{
+    const transaction= await sequelize.transaction()
+    const user=req.user
+    
+    try{
+        const{amount,description,category}=req.body
+        if(isStringNotValid(amount) || isStringNotValid(description) || isStringNotValid(category)){
+            return res.status(400).json({error:"something is missing"})
+
+        }
+        const currentDate=new Date()
+        const day=currentDate.getDate()
+        const month=currentDate.getMonth()+1
+        const year=currentDate.getFullYear()
+     
+        const expense= await user.createExpense({day,month,year,amount,description,category},{transaction:transaction})
+
+         const totalAmount=Number(user.totalExpenses)+Number(amount)
+         await User.update({
+            totalExpenses:totalAmount
+        },{
+            where:{id:user.id},
+            transaction:transaction
+        })
+        await transaction.commit()
+        res.status(200).json(expense)
+    }catch(err){
+        await transaction.rollback()
+        res.status(500).json({error:err})
+    }
+
+}
+
+exports.getExpenses=async (req,res)=>{
+    try {
+        const page = Number(req.query.page) || 1;
+        const itemsPerPage= Number(req.query.expensePerPage);
+        // console.log(itemsPerPage)
+    
+        const user = req.user;
+        
+    
+        const expenses = await user.getExpenses({
+          offset:(page - 1) * itemsPerPage,
+          limit: itemsPerPage
+        });
+    
+        // total count of expenses of the user
+        const totalCount = await user.countExpenses();
+    
+        const lastPage = Math.ceil(totalCount / itemsPerPage);
+    
+        res.status(200).json({
+          expenses:expenses,
+          pagination:{
+            currentPage: page,
+            hasNextPage: page < lastPage-1,
+            nextPage: page + 1,
+            hasPreviousPage: page > 1,
+            previousPage: page - 1,
+            lastPage:lastPage
+
+          }
+          
+        });
+      } catch (err) {
+        res.status(500).json({ error: 'Failed to retrieve expenses' });
+      }
+    }
+
+
+exports.deleteExpense=async(req,res)=>{
+    const transaction = await sequelize.transaction();
+    try{
+        const user=req.user
+    const id=req.params.id
+
+    const expense=await Expense.findOne({where:{id:id,userId:user.id},transaction})
+    if(!expense){
+        await transaction.rollback()
+        return res.status(404).json({ error: 'Expense not found' });
+    }
+    const totalAmount= Number(user.totalExpenses) -Number(expense.amount)
+    await User.update({
+        totalExpenses:totalAmount
+    },{
+      where:{
+        id:user.id
+      },
+      transaction 
+    })
+    await expense.destroy()
+
+    await transaction.commit();
+    return res.status(200).json({message:'Successfully deleted the expense'})
+    }catch(err){
+        await transaction.rollback()
+        res.status(500).json({error:err})
+    }
+
+}
+exports.getDayExpenses = async (req, res) => {
+    try {
+        const { day, month, year } = req.query;
+        const user = req.user;
+        const dayExpenses = await user.getExpenses({ where: { day: day, month: month, year: year } });
+        if(dayExpenses.length==0){
+         return res.status(400).json({error:"No Expenses Of This Day"})
+        }
+        
+        
+        let totalAmount = 0;
+        for (let expense of dayExpenses) {
+            totalAmount += expense.amount;
+        }
+
+        res.status(200).json({ expenses: dayExpenses, totalAmount: totalAmount });
+    } catch (err) {
+        res.status(500).json({ error: err });
+    }
+}
+exports.getMonthExpenses=async(req,res)=>{
+    try{
+        const{month,year}=req.query;
+        const user=req.user;
+        const monthExpenses=await user.getExpenses({where:{month:month,year:year}})
+        if(monthExpenses.length==0){
+            return res.status(400).json({error:"No Expenses Of This Month"})
+           }
+
+        let totalAmount=0
+        for(let expense of monthExpenses){
+            totalAmount+=expense.amount
+        }
+        console.log(totalAmount)
+        res.status(200).json({expenses:monthExpenses,totalAmount:totalAmount})
+
+    }catch (err) {
+        res.status(500).json({ error: err });
+    }
 }
