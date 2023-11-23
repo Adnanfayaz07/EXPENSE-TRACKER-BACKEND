@@ -1,44 +1,103 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Expense Tracker</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>expenses</title>
+    <link rel="stylesheet" href="expense.css">
+    <link rel="icon" type="image/lpg" href="../img/favi.png">
+
 </head>
+
 <body>
 
-    <form onsubmit="savetolocaltostorage(event)">
-        <div>
-            <label for="nameusertag">choose expense amount:</label>
-            <input type="number" name= "name" id ="nameusertag">
-            <label for="emailusertag">choose description:</label>
-            <input type="text" name="email"  id="emailusertag" >
-            <label for="categories">choose a category:</label>
-            <select type="radio" name="category" id="categories" >
-                <option value = "fuel">fuel</option>
-                <option value = "movies">movies</option>
-                <option value = "suits">suits</option>
-                <option value = "picnic">picnic</option>
-                <option value = "travel">travel</option>
+    <body>
+        <div class="topbtn">
+            <div class="topleftbtn">
+                <button id="home">Home</button>
+                <button id="report">Report</button>
+                <button id="leaderboardbtn">Leaderboard</button>
+                <button id="showdownloads">Download History</button>
+            </div>
+            <div class="toprightbtn">
+                <span class="premiummember" id="premium-message"></span>
+                <button id="premium-button">Buy Premium</button>
+                <button id="logout">Logout</button>
+            </div>
+        </div>
+
+        <form id="expenseform">
+            <h4>Choose expenseamout:</h4><input type="number" name="expense" id="amount" placeholder="Amount">
+            <h4>Choose description:</h4> <input type="text" name="description" id="description" placeholder="Description">
+            <h4>Choose a category:</h4> <select name="category" id="category">
+                <option class="option" value="Gadgets">Gadgets</option>
+                <option class="option" value="Groceries">Groceries</option>
+                <option class="option" value="Healthcare">Healthcare</option>
+                <option class="option" value="Entertainment">Entertainment</option>
+                <option class="option" value="Shopping">Shopping</option>
+                <option class="option" value="Education">Education</option>
+                <option class="option" value="Utilities">Utilities</option>
+                <option class="option" value="Insurance">Insurance</option>
+                <option class="option" value="Gifts">Gifts</option>
+                <option class="option" value="Electronics">Electronics</option>
+                <option class="option" value="Hair/Beauty">Hair/Beauty</option>
+                <option class="option" value="Transportation">Transportation</option>
+                <option class="option" value="Other">Other</option>
+
             </select>
-        <input class="btn" type="submit" value="addexpense">
- </div>
-    </form>
-    <div id="message">
-      
-      </div>
-      <ul id="listofitems"></ul>
-      
-      <div id="leaderboard">
-      </div>
-    <button id="rzp-button1">Buy Premium</button>
-    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+            <button id="btnaddexpence">Add Expenses</button>
+        </form>
+
+
+        <div id="expenseError"></div><br>
+
+        <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
+
+        <label for="rows">Rows per Page</label>
+        <select name="rows" id="rows">
+            <option value="5">5</option>
+            <option value="10">10</option>
+            <option value="15">15</option>
+            <option value="20">20</option>
+        </select>
+        <!-- // table for displaying the expenses -->
+        <div id="sectionfortable">
+            <table>
+                <thead>
+                    <th>Date</th>
+                    <th>Category</th>
+                    <th>Description</th>
+                    <th>Amount</th>
+                    <th></th>
+                    
+        <tbody id="tbody">
+
+        </tbody>
+        </table>
     
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
-   
-       <script src="./expense.js"></script>
+        <button id="download">Download Expenses</button> 
+        <div id="pagination-button"></div>
+        
+        </div>
+
+        <!-- <div id="pagination-button"></div> <br> -->
+        <div id="showdownloadbutton"></div>
+             
+        <div class="downloadhistory">
+           
+        
+        </div>
+        
 
 
-</body>
+        <ul id="showurls"></ul>
+
+
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.4.0/axios.min.js"></script>
+        <script src="expense.js"></script>
+
+    </body>
 
 </html>

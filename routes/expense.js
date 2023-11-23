@@ -1,10 +1,20 @@
-const express = require('express');
-const router = express.Router();
-const expenseController = require('../controller/expense');
-const userauthentication=require('../middleware/auth')
+const express=require('express')
+const router=express.Router()
+const expenseController=require('../controller/expense')
+const userAuthentication=require('../middleware/auth')
+const downloadController=require('../controller/download')
 
-router.post('/add-expense',userauthentication.authenticate,expenseController.addexpense)
-router.get('/get-expense',userauthentication.authenticate,expenseController.getexpense)
+// EXPENSE ROUTES
+router.post('/add-expenses',userAuthentication.authenticate,expenseController.addExpenses)
+router.get('/get-expenses',userAuthentication.authenticate,expenseController.getExpenses )
+router.get('/day-expenses',userAuthentication.authenticate,expenseController.getDayExpenses)
+router.get('/month-expenses',userAuthentication.authenticate,expenseController.getMonthExpenses)
+router.delete('/delete-expense/:id',userAuthentication.authenticate,expenseController.deleteExpense)
 
-router.delete('/delete-expense/:id',userauthentication.authenticate,expenseController.deleteexpense)
-module.exports = router;
+
+//Download  Routes
+router.get('/downloadExpenses',userAuthentication.authenticate,downloadController.downloadExpenses)
+router.get('/getdownloadedURLS',userAuthentication.authenticate,downloadController.getURLS)
+
+
+module.exports=router

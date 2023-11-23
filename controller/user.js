@@ -1,73 +1,71 @@
 
-const Users = require('../model/user');
-const bcrypt = require('bcrypt')
+const User=require('../model/user')
+const bcrypt=require('bcrypt')
 const jwt=require('jsonwebtoken')
+require('dotenv').config();
 
-function isstringinvalid(string) {
-    if (string == undefined || string.length === 0) {
+
+
+function generateAccessToken(id,name,ispremium){
+    return jwt.sign({userid:id,username:name,isPremium:ispremium},process.env.SECRET_KEY
+        )
+}
+
+
+function isStringInvalid(string){
+    if(string===undefined || string.length===0){
         return true
     }
-    else {
+    else{
         return false
-
     }
 }
-const signup = async (req, res) => {
+
+
+exports.signUp=async(req,res,next)=>{
+    try{
+        const {name,email,password}=req.body
+        
+        if(isStringInvalid(name) || isStringInvalid(email) || isStringInvalid(password)){
+            return res.status(400).json({error:"something is missing"})
+        }
+
+        const saltRounds=10
+        const hash = await bcrypt.hash(password, saltRounds);
+
+         await User.create({name,email,password:hash})
+                res.status(200).json("record inserted correctly")
+
+
+    }catch(err){
+        res.status(404).json({error:err })
+
+    }
+   
+}
+
+exports.logIn = async (req, res, next) => {
     try {
-        const { name, email, password } = req.body;
-        console.log('email', email)
-        if (isstringinvalid(name) || isstringinvalid(email) || isstringinvalid(password)) {
-            return res.status(400).json({ err: "Bad parameters.Something is missing" })
-        }
-        const saltrounds = 10;
-        bcrypt.hash(password, saltrounds, async (err, hash) => {
-            console.log(err);
-            await Users.create({ name, email, password: hash })
-            res.status(201).json({ message: 'successfully create new user' })
-        })
+        const{useremail,userpassword}  = req.body
 
-    }
-    catch (err) {
-        res.status(500).json(err)
-    }
-}
-const  generateAccesstoken= (id,name,ispremiumuser)=>{
-return jwt.sign({userId:id,name:name,ispremiumuser},'hellonomo')
-}
-const login = async (req, res) => {
-    try {
-        const { email, password } = req.body;
-        if (isstringinvalid(email) || isstringinvalid(password)) {
-            return res.status(400).json({ message: "Emailid or Password is missing", success: false })
+        if(isStringInvalid(useremail) || isStringInvalid(userpassword) ){
+            return res.status(400).json({error:"something is missing"})
         }
-        console.log(password);
-        const user = await Users.findAll({ where: { email } })
-        if (user.length > 0) {
-            bcrypt.compare(password, user[0].password,(err, result) => {
-                if(err) {
-                    throw new Error('something went wrong')
-                }
-                   if(result==true) {
-                  return   res.status(200).json({ success: true, message: 'user logged in successfully',token:generateAccesstoken(user[0].id,user[0].name,user[0].ispremiumuser) })
-                }
-                    else{
-                    return res.status(400).json({ success: false, message: "password is incorrect" })
-                }
 
-            })
-        }
-                    else {
-                    return res.staus(404).json({ success: false, message: 'user doesnot exist' })
-                }
-                
+        const user = await User.findOne({ where: { email: useremail } });
+        // console.log("user",user)
+
+        if (user) {
+            const passwordMatch = await bcrypt.compare(userpassword, user.password);
+            if (passwordMatch) {
+                res.status(200).json({ message: "User logged in successfully",token:generateAccessToken(user.id,user.name,user.isPremium)});
+            } else {
+                res.status(400).json({ error: 'Invalid password' });
             }
-                catch (err) {
-            res.status(500).json({ message: err, success: false })
+        } else {
+            res.status(404).json({ error: 'User not found' });
         }
-
+    } catch (err) {
+        res.status(500).json({ error: err.message });
     }
-    module.exports = {
-        signup: signup,
-        login: login,
-        generateAccesstoken: generateAccesstoken, // Use lowercase "generateAccesstoken"
-    };
+}

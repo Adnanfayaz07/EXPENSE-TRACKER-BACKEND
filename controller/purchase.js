@@ -1,47 +1,63 @@
-const Razorpay=require('razorpay')
-const Order=require('../model/order')
-const usercontroller=require('./user')
+const Order = require('../model/order');
+const jwt=require('jsonwebtoken')
+const Razorpay = require('razorpay');
 require('dotenv').config();
-exports.purchasepremium = async (req,res)=>{
-    try{
-        console.log(process.env.Razorpay_KEY_ID)
-        var rzp=new Razorpay({
-           
-            key_id:process.env.Razorpay_KEY_ID,
-            key_secret:process.env.Razorpay_KEY_SECRET
-        })
-        const amount=2500;
-        rzp.orders.create({amount,currency:"INR"},(err,order)=>{
-            if(err){
-                throw new Error(JSON.stringify(err))
-            }
-            req.user.createOrder({orderid:order.id,status:'PENDING'}).then(()=>{
-                return res.status(201).json({order,key_id:rzp.key_id})
-            }).catch(err=>{
-                throw new Error
-            })
-        })
-    }
-    catch(err){
-        console.log(err);
-        res.status(403).json({message:'something went wrong',error:err})
-    }
+
+function generateAccessToken(id,name,ispremium){
+  return jwt.sign({userid:id,username:name,isPremium:ispremium},process.env.SECRET_KEY
+      )
 }
-exports.updatetransactionStatus = async (req,res)=>{
+
+const rzp = new Razorpay({
+  key_id: process.env.RAZORPAY_KEY_ID,
+  key_secret:process.env.RAZORPAY_KEY_SECRET
+});
+
+exports.purchasePremium = async (req, res) => {
+  try {
+    const user = req.user;
+
+    // Create an order with the specified amount and currency
+    const order = await rzp.orders.create({
+      amount: 50000, // Amount in the smallest currency unit (e.g., paise in INR)
+      currency: 'INR',
+    });
+
+    // Use the magic method to create an associated order
+    const createdOrder = await user.createOrder({
+      orderid: order.id,
+      status: 'PENDING',
+    });
+
+    return res.status(201).json({ order: order, key_id: rzp.key_id });
+  } catch (err) {
+    // console.error(err);
+    return res.status(500).json({ error: 'Failed to create order' });
+  }
+};
+
+exports.updateTransaction=async(req,res)=>{
     try{
-        const userId=req.user.id
-        const{payment_id,order_id}=req.body
-        const order=await Order.findOne({where:{orderid:order_id}})
-        const promise1=order.update({paymentid:payment_id,status:'SUCCESSFUL'})
-        const promise2=req.user.update({ispremiumuser:true})
-        Promise.all([promise1,promise2]).then(()=>{
-return res.status(202).json({success:true,message:'transaction successful',token: usercontroller.generateAccesstoken(userId, undefined, true)})
-        }).catch((error)=>{
-            throw new Error(error)
-        })
+        const{orderId,paymentId}=req.body
+        const user=req.user
+      const order=  await  Order.findOne({where:{orderid:orderId}})
+
+      if (!order) {
+        return res.status(404).json({ success: false, message: 'Order not found' });
+    }
+   const promise1= order.update({paymentid:paymentId,status:'successful'})
+    const promise2= user.update({isPremium:true})
+    Promise.all([promise1,promise2]).then(()=>{
+      res.status(200).json({success:true,message:"Transaction successful",token:generateAccessToken(user.id,undefined,true)})
+
+    }).catch((err)=>{
+      throw new Error(err)
+    })
+
+  
+
     }catch(err){
-        console.log(err)
-        res.status(403).json({error:err,message:'something went wrong'})
+        res.status(500).json({error:err})
     }
 
 }

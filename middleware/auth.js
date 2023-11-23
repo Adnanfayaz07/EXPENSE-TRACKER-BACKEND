@@ -1,24 +1,20 @@
 
 const User=require('../model/user')
-const  jwt =require('jsonwebtoken')
-
-const authenticate=(req,res,next)=>{
+const jwt=require('jsonwebtoken')
+require('dotenv').config();
+exports.authenticate=async(req,res,next)=>{
     try{
         const token=req.header('Authorization')
-        const user=jwt.verify(token,'hellonomo');
-        console.log(user.userId)
-        User.findByPk(user.userId).then(user=>{
-console.log(user)
-            req.user=user;
+        const userPayload=await jwt.verify(token,process.env.SECRET_KEY)
 
-            next();
-        })
+        const user=await User.findByPk(userPayload.userid)
+        req.user=user
+        next()
+        
+
     }catch(err){
-        console.log(err)
-        return res.status(401).json({success:false})
-    }
-}
-module.exports={
+        res.status(401).json({ error: 'Authentication failed' });
 
-    authenticate
+    }
+
 }
