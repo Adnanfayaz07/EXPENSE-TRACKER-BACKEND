@@ -15,7 +15,7 @@ axios.post("http://54.81.91.216:3000/user/login",details).then((res)=>{
 alert(res.data.message)
 const token=res.data.token
 localStorage.setItem('token',token)
-window.location.href = '../Expense/expense.html';
+window.location.href = '../expense/expense.html';
 
 
  }).catch((err)=>{
