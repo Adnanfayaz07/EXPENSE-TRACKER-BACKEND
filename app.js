@@ -35,7 +35,7 @@ app.use('/password', passwordRoute);
 app.use((req, res) => {
     console.log(req.url)
     console.log("req is completed ")
-    res.sendFile(path.join(__dirname, 'ExpenseTracker', req.url)) ;
+    res.sendFile(path.join(__dirname, `ExpenseTracker/${req.url}`    )) ;
 });
 
 // Relations
