@@ -20,7 +20,7 @@ const tbody= document.querySelector('#tbody')
 //logout
 const logout=document.querySelector('#logout')
 logout.addEventListener('click',()=>{
-  window.location.href = '../Login/login.html';
+  window.location.href = '../login/login.html';
 })
 // home
 const home=document.querySelector('#home')
