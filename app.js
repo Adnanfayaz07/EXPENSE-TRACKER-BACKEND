@@ -37,7 +37,7 @@ app.use((req, res) => {
     console.log("req is completed ")
     res.sendFile(path.join(__dirname, `ExpenseTracker/${req.url}`    )) ;
 });
-console.log('its is going to complete now')
+
 // Relations
 User.hasMany(Expense);
 Expense.belongsTo(User);
