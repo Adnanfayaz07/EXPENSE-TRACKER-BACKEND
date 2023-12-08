@@ -10,7 +10,7 @@ useremail:email.value,
 userpassword:password.value
 }
 
-axios.post("http://54.235.24.107:3000/user/login",details).then((res)=>{
+axios.post("http://107.22.88.71:3000/user/login",details).then((res)=>{
 
 alert(res.data.message)
 const token=res.data.token

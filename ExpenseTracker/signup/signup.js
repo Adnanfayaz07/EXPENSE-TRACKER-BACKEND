@@ -14,7 +14,7 @@ const signUpForm=document.querySelector('#signupform')
             password:userpassword.value
     
         }
-        axios.post('http://54.235.24.107:3000/user/signup',details).then((res)=>{
+        axios.post('http://107.22.88.71:3000/user/signup',details).then((res)=>{
     
             window.location.href = '../login/login.html';
             

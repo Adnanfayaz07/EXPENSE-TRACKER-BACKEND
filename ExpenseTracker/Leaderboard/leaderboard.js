@@ -1,4 +1,4 @@
-axios.get('http://54.235.24.107:3000/premium/showleaderboard').then((res) => {
+axios.get('http://107.22.88.71:3000/premium/showleaderboard').then((res) => {
     const leaderboardData = res.data;
 
     const tbody = document.querySelector('#tbody')
