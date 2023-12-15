@@ -13,11 +13,11 @@ const passwordRoute = require('./routes/password');
 const sequelize = require('./util/database');
 
 // Models imported
-const User = require('./model/user');
-const Expense = require('./model/expense');
-const Order = require('./model/order');
-const ForgotPasswordRequest = require('./model/forgotpassword');
-const FilesDownloaded = require('./model/filesDownloaded');
+const User = require('./models/user');
+const Expense = require('./models/expense');
+const Order = require('./models/order');
+const ForgotPasswordRequest = require('./models/forgotpassword');
+const FilesDownloaded = require('./models/filesDownloaded');
 
 const app = express();
 
@@ -35,7 +35,7 @@ app.use('/password', passwordRoute);
 app.use((req, res) => {
     console.log(req.url)
     console.log("req is completed ")
-    res.sendFile(path.join(__dirname, `ExpenseTracker/${req.url}`    )) ;
+    res.sendFile(path.join(__dirname, `public/${req.url}`    )) ;
 });
 
 // Relations
